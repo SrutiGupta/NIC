@@ -37,21 +37,29 @@ class AuthController extends Controller
     }
 
     public function signinSubmit(Request $request)
+{
+    $request->validate([
+        'email'    => 'required|email',
+        'password' => 'required',
+        'captcha'  => 'required'
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return back()->with('error', 'Invalid email or password!');
+    }
+
+    session(['user' => $user]);
+
+    return redirect('/form')->with('success', 'Welcome ' . $user->name . '!');
+}
+ public function generateCaptcha()
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
+        $captcha = substr(str_shuffle("ABCDEFGHJKLMNPQRSTUVWXYZ23456789"), 0, 5);
+        session(['captcha' => $captcha]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return back()->with('error', 'Invalid email or password!');
-        }
-
-        session(['user' => $user]);
-
-        return redirect('/form')->with('success', 'Welcome ' . $user->name . '!');
+        return response()->json(['captcha' => $captcha]);
     }
 
     public function logout()
