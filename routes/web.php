@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/verify-otp', function () {
+    return view('verify-otp');
+});
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FormController;
@@ -13,6 +16,8 @@ Route::post('/signup', [AuthController::class, 'signupSubmit']);
 Route::get('/signin',  [AuthController::class, 'signinPage']);
 Route::post('/signin', [AuthController::class, 'signinSubmit']);
 Route::get('/captcha', [AuthController::class, 'generateCaptcha']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::get('/logout',  [AuthController::class, 'logout']);
+Route::get('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::get('/form', [FormController::class, 'index']);
 Route::post('/submit', [FormController::class, 'submit']);
