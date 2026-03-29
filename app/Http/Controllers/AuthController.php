@@ -51,17 +51,22 @@ class AuthController extends Controller
         return back()->with('error', 'Invalid email or password!');
     }
 
-// ✅ Generate OTP
+// Generate OTP
     $otp = rand(100000, 999999);
 
-    // ✅ Store in session
+    $user->update([
+    'otp' => Hash::make($otp),
+    'otp_expires_at' => now()->addSeconds(30)
+]);
+
+    //  Store in session
     session([
         'otp' => $otp,
         'otp_user' => $user,
         'otp_expire' => now()->addSeconds(30)
     ]);
 
-    // ✅ Send OTP to log (fake email)
+    // Send OTP to log (fake email)
     Mail::raw("Your OTP is: $otp", function ($message) use ($user) {
         $message->to($user->email)
                 ->subject('OTP Verification');
@@ -83,18 +88,20 @@ public function verifyOtp(Request $request)
         'otp' => 'required'
     ]);
 
-    // ❌ Check expiry
+    // Check expiry
     if (now()->gt(session('otp_expire'))) {
         return redirect('/signin')->with('error', 'OTP expired!');
     }
 
-    // ❌ Check wrong OTP
-    if ($request->otp != session('otp')) {
-        return back()->with('error', 'Invalid OTP!');
-    }
+    // Check wrong OTP
+   $user = session('otp_user');
+
+if (!Hash::check($request->otp, $user->otp)) {
+    return back()->with('error', 'Invalid OTP!');
+}
 
 
-    // ✅ Login success
+    // Login success
     session(['user' => session('otp_user')]);
 
     // clear session
@@ -109,8 +116,7 @@ public function resendOtp()
     if (!$user) {
         return redirect('/signin')->with('error', 'Session expired!');
     }
-
-    // ✅ New OTP
+    // New OTP
     $otp = rand(100000, 999999);
 
     session([
@@ -118,7 +124,7 @@ public function resendOtp()
         'otp_expire' => now()->addSeconds(30)
     ]);
 
-    // ✅ Send again (log mail)
+    // Send again (log mail)
     \Mail::raw("Your new OTP is: $otp", function ($message) use ($user) {
         $message->to($user->email)
                 ->subject('Resend OTP');
