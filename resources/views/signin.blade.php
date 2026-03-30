@@ -40,8 +40,14 @@
                     @error('password')
                      <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div >
+                <div class="tex-end mt-1">
+                    <a href="/forget-password" class="text-info" style="font-size:0.82rem;">
+                        Forgot Password?
+                    </a>
                 </div>
                     <div class="mb-3">
+
     <label class="form-label">Captcha</label>
 
     <div class="d-flex align-items-center gap-2">
