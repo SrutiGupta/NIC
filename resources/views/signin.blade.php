@@ -51,9 +51,9 @@
     <label class="form-label">Captcha</label>
 
     <div class="d-flex align-items-center gap-2">
-        <input type="text" id="captchaText"
-               class="form-control w-50 text-center fw-bold"
-               readonly>
+            <img src="/captcha" id="captchaImg"
+                 alt="captcha"
+                 style="height:50px; border-radius:6px; border:1px solid #ccc;">
 
         <button type="button" onclick="loadCaptcha()"
                 class="btn btn-secondary btn-sm">
@@ -73,11 +73,7 @@
 </div>
 <script>
 function loadCaptcha() {
-    fetch('/captcha')
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('captchaText').value = data.captcha;
-        });
+    document.getElementById('captchaImg').src = '/captcha?' + Date.now();
 }
 
 // load captcha on page load

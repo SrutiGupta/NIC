@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use App\Models\User;
-use App\Models\OtpToken;
 
 class ForgotPasswordController extends Controller
 {
@@ -13,8 +13,6 @@ class ForgotPasswordController extends Controller
     public function showPage()
     {
         return view('forget-password');
-        // /captcha route is called by the blade itself
-        // CaptchaController sets session['captcha_answer'] automatically
     }
 
     // ── Handle email + captcha submit ──────────────
@@ -26,7 +24,7 @@ class ForgotPasswordController extends Controller
         ]);
 
         // ── CAPTCHA check ──────────────────────────
-        if ($request->captcha !== session('captcha_answer')) {
+        if (strtoupper(trim($request->captcha)) !== session('captcha')) {
             return back()
                 ->withInput($request->only('email'))
                 ->with('error', 'Incorrect CAPTCHA. Please try again.');
@@ -41,25 +39,27 @@ class ForgotPasswordController extends Controller
                 ->with('error', 'No account found with that email.');
         }
 
-        // ── Generate OTP ───────────────────────────
-        // Delete any old OTP for this email first
-        OtpToken::where('email', $user->email)->delete();
+        // ── Generate OTP using same flow as sign in ─
+        $otp = rand(100000, 999999);
 
-        $otp = str_pad((string) rand(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        OtpToken::create([
-            'email'      => $user->email,
-            'otp'        => $otp,
-            'expires_at' => now()->addMinutes(10),
+        $user->update([
+            'otp' => Hash::make($otp),
+            'otp_expires_at' => now()->addSeconds(30)
         ]);
 
-        // ── Set both sessions ──────────────────────
-        // otp_email   → OtpController uses this to query the DB
-        // reset_email → flag that tells OtpController this is a reset flow
-        session(['otp_email'   => $user->email]);
-        session(['reset_email' => $user->email]);
+        session([
+            'otp' => $otp,
+            'otp_user_id' => $user->id,
+            'otp_expire' => now()->addSeconds(30)->toDateTimeString(),
+            'otp_flow' => 'forgot'
+        ]);
 
-        return redirect('/otp')->with('success', 'OTP generated. Check otp_tokens table.');
+        Mail::raw("Your OTP is: $otp", function ($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('Password Reset OTP');
+        });
+
+        return redirect('/verify-otp')->with('success', 'OTP sent to your email.');
     }
 
     // ── Show reset password page ───────────────────

@@ -44,13 +44,14 @@
                         <i class="bi bi-shield-check me-1"></i>CAPTCHA
                     </label>
 
-                    {{-- SVG from CaptchaController — same as signin page --}}
+                    {{-- SVG CAPTCHA --}}
                     <div class="mb-2">
                         <img
                             src="/captcha"
                             id="captchaImg"
                             alt="captcha"
-                            style="border-radius:6px; cursor:pointer;"
+                            style="height:50px; border-radius:6px; cursor:pointer; border:1px solid #495057;"
+                            onclick="this.src='/captcha?' + Date.now()"
                         />
                         <small class="text-secondary d-block mt-1">
                             <i class="bi bi-arrow-clockwise me-1"></i>
