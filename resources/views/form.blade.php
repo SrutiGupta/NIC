@@ -126,20 +126,28 @@
         <div class="success">{{ session('success') }}</div>
     @endif
 
+    @if($errors->any())
+        <div style="background:#f8d7da; color:#842029; padding:10px; border-radius:5px; margin-bottom:10px;">
+            @foreach($errors->all() as $error)
+                <div>{{ $error }}</div>
+            @endforeach
+        </div>
+    @endif
+
     <form id="form" method="POST" action="/submit" enctype="multipart/form-data">
     @csrf
 
     <label>Full Name</label>
-    <input type="text" name="name" placeholder="Enter your full name">
+    <input type="text" name="name" value="{{ old('name') }}" placeholder="Enter your full name">
 
     <label>Address</label>
-    <input type="text" name="address" placeholder="Enter your address">
+    <input type="text" name="address" value="{{ old('address') }}" placeholder="Enter your address">
 
     <label>Email</label>
-    <input type="email" name="email" placeholder="Enter your email">
+    <input type="email" name="email" value="{{ old('email') }}" placeholder="Enter your email">
 
     <label>Phone Number</label>
-    <input type="text" name="phone" placeholder="Enter phone number">
+    <input type="text" name="phone" value="{{ old('phone') }}" placeholder="Enter phone number">
 
     <label>Upload Image</label>
 
@@ -160,7 +168,7 @@
     <canvas id="canvas" style="display:none;"></canvas>
 
     <label>Message</label>
-    <textarea name="message" placeholder="Enter your message"></textarea>
+    <textarea name="message" placeholder="Enter your message">{{ old('message') }}</textarea>
 
     <button type="submit" id="submitBtn">Submit</button>
 

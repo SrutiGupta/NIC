@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Models\FormSubmission;
 
 class FormController extends Controller
 {
@@ -18,11 +17,11 @@ class FormController extends Controller
 
         $request->validate([
             'name'    => 'required|string|max:100',
-            'email'   => 'required|email|unique:users,email',
+            'email'   => 'required|email|max:255',
             'phone'   => 'required|string|max:15',
             'address' => 'required|string|max:255',
             'message' => 'required|string',
-            'image'   => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'image'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $imageData = null;
@@ -34,12 +33,13 @@ class FormController extends Controller
             $imageData = 'data:' . $type . ';base64,' . base64_encode(file_get_contents($file));
         }
 
-                User::create([
+        FormSubmission::create([
             'name'     => $request->name,
+            'address'  => $request->address,
             'email'    => $request->email,
             'phone'    => $request->phone,
+            'message'  => $request->message,
             'image'    => $imageData,
-            'password' => Hash::make('123456'),   
         ]);
 
         

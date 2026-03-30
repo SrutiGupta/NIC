@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OtpToken;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
 
 class AuthController extends Controller
 {
@@ -58,19 +58,11 @@ class AuthController extends Controller
         return back()->with('error', 'Invalid email or password!');
     }
 
-// Generate OTP
-    $otp = rand(100000, 999999);
+    [$otp, $token] = $this->createOtpToken($user, 'signin');
 
-    $user->update([
-    'otp' => Hash::make($otp),
-    'otp_expires_at' => now()->addSeconds(30)
-]);
-
-    //  Store in session
     session([
-        'otp' => $otp,
         'otp_user_id' => $user->id,
-        'otp_expire' => now()->addSeconds(30)->toDateTimeString(),
+        'otp_token_id' => $token->id,
         'otp_flow' => 'signin'
     ]);
 
@@ -115,30 +107,50 @@ public function verifyOtp(Request $request)
         'otp' => 'required'
     ]);
 
-    // Check expiry
-    $otpExpire = session('otp_expire');
     $flow = session('otp_flow', 'signin');
-    if (!$otpExpire || now()->gt(Carbon::parse($otpExpire))) {
-        session()->forget(['otp', 'otp_user_id', 'otp_expire', 'otp_flow']);
+    $tokenId = session('otp_token_id');
+    $userId = session('otp_user_id');
+
+    if (!$tokenId || !$userId) {
+        session()->forget(['otp_user_id', 'otp_token_id', 'otp_flow']);
+        return redirect($flow === 'forgot' ? '/forget-password' : '/signin')->with('error', 'Session expired!');
+    }
+
+    $token = OtpToken::where('id', $tokenId)
+        ->where('user_id', $userId)
+        ->where('flow', $flow)
+        ->whereNull('used_at')
+        ->first();
+
+    if (!$token) {
+        session()->forget(['otp_user_id', 'otp_token_id', 'otp_flow']);
+        return redirect($flow === 'forgot' ? '/forget-password' : '/signin')->with('error', 'Invalid OTP session!');
+    }
+
+    if (now()->gt($token->expires_at)) {
+        session()->forget(['otp_user_id', 'otp_token_id', 'otp_flow']);
         return redirect($flow === 'forgot' ? '/forget-password' : '/signin')->with('error', 'OTP expired!');
     }
 
     // Check wrong OTP
-   $user = User::find(session('otp_user_id'));
+   $user = User::find($userId);
 
 if (!$user) {
-    session()->forget(['otp', 'otp_user_id', 'otp_expire', 'otp_flow']);
+    session()->forget(['otp_user_id', 'otp_token_id', 'otp_flow']);
     return redirect('/signin')->with('error', 'Session expired! Please sign in again.');
 }
 
-if (!Hash::check($request->otp, $user->otp)) {
+if (!Hash::check($request->otp, $token->otp_hash)) {
     return back()->with('error', 'Invalid OTP!');
 }
+
+    $token->used_at = now();
+    $token->save();
 
 
     if ($flow === 'forgot') {
         session(['verified_reset_email' => $user->email]);
-        session()->forget(['otp', 'otp_user_id', 'otp_expire', 'otp_flow']);
+        session()->forget(['otp_user_id', 'otp_token_id', 'otp_flow']);
         return redirect('/reset-password')->with('success', 'OTP verified. You can now reset your password.');
     }
 
@@ -147,7 +159,7 @@ if (!Hash::check($request->otp, $user->otp)) {
     session(['user' => $user]);
 
     // clear session
-    session()->forget(['otp', 'otp_user_id', 'otp_expire', 'otp_flow']);
+    session()->forget(['otp_user_id', 'otp_token_id', 'otp_flow']);
 
     return redirect('/form')->with('success', 'Login successful!');
 }
@@ -159,17 +171,10 @@ public function resendOtp()
     if (!$user) {
         return redirect($flow === 'forgot' ? '/forget-password' : '/signin')->with('error', 'Session expired!');
     }
-    // New OTP
-    $otp = rand(100000, 999999);
-
-    $user->update([
-        'otp' => Hash::make($otp),
-        'otp_expires_at' => now()->addSeconds(30)
-    ]);
+    [$otp, $token] = $this->createOtpToken($user, $flow);
 
     session([
-        'otp' => $otp,
-        'otp_expire' => now()->addSeconds(30)->toDateTimeString()
+        'otp_token_id' => $token->id,
     ]);
 
     // Send again (log mail)
@@ -179,6 +184,25 @@ public function resendOtp()
     });
 
     return redirect('/verify-otp')->with('success', 'OTP resent!');
+}
+
+private function createOtpToken(User $user, string $flow): array
+{
+    OtpToken::where('user_id', $user->id)
+        ->where('flow', $flow)
+        ->whereNull('used_at')
+        ->delete();
+
+    $otp = (string) rand(100000, 999999);
+
+    $token = OtpToken::create([
+        'user_id' => $user->id,
+        'flow' => $flow,
+        'otp_hash' => Hash::make($otp),
+        'expires_at' => now()->addSeconds(30),
+    ]);
+
+    return [$otp, $token];
 }
 
     public function logout()

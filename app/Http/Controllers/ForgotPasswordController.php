@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Models\OtpToken;
 use App\Models\User;
 
 class ForgotPasswordController extends Controller
@@ -39,18 +40,24 @@ class ForgotPasswordController extends Controller
                 ->with('error', 'No account found with that email.');
         }
 
-        // ── Generate OTP using same flow as sign in ─
-        $otp = rand(100000, 999999);
+        // ── Generate OTP in otp_tokens table ─
+        OtpToken::where('user_id', $user->id)
+            ->where('flow', 'forgot')
+            ->whereNull('used_at')
+            ->delete();
 
-        $user->update([
-            'otp' => Hash::make($otp),
-            'otp_expires_at' => now()->addSeconds(30)
+        $otp = (string) rand(100000, 999999);
+
+        $token = OtpToken::create([
+            'user_id' => $user->id,
+            'flow' => 'forgot',
+            'otp_hash' => Hash::make($otp),
+            'expires_at' => now()->addSeconds(30),
         ]);
 
         session([
-            'otp' => $otp,
             'otp_user_id' => $user->id,
-            'otp_expire' => now()->addSeconds(30)->toDateTimeString(),
+            'otp_token_id' => $token->id,
             'otp_flow' => 'forgot'
         ]);
 
