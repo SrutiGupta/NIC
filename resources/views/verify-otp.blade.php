@@ -2,9 +2,12 @@
 @section('content')
 
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-5">
         <div class="card shadow p-4">
-            <h3 class="mb-4 fw-bold">Verify OTP</h3>
+            <h3 class="mb-1 fw-bold">Verify OTP</h3>
+            <p class="text-muted mb-4" style="font-size:0.9rem;">
+                Enter the OTP sent to your email.
+            </p>
 
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -26,7 +29,7 @@
                 @csrf
 
                 <input type="text" name="otp" class="form-control mb-3"
-                       placeholder="Enter OTP">
+                       placeholder="Enter OTP" autocomplete="off">
 
                 <button type="submit" class="btn btn-dark w-100" id="verifyBtn">
                     Verify
@@ -42,6 +45,8 @@
                     Resend OTP
                 </button>
             </div>
+
+            <p class="mt-3 text-center"><a href="/signin">Back to Sign In</a></p>
 
         </div>
     </div>

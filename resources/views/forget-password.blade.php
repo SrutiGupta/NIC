@@ -3,10 +3,10 @@
 
 <div class="row justify-content-center">
     <div class="col-md-5">
-        <div class="card shadow p-4 border-0" style="background-color: #1e2a38;">
+        <div class="card shadow p-4">
 
-            <h3 class="mb-1 fw-bold text-white">Forgot Password</h3>
-            <p class="text-secondary mb-4" style="font-size:0.9rem;">
+            <h3 class="mb-1 fw-bold">Forgot Password</h3>
+            <p class="text-muted mb-4" style="font-size:0.9rem;">
                 Enter your registered email and solve the CAPTCHA.<br>
                 We'll generate an OTP for verification.
             </p>
@@ -23,13 +23,11 @@
 
                 {{-- Email --}}
                 <div class="mb-3">
-                    <label class="form-label text-secondary">
-                        <i class="bi bi-envelope me-1"></i>Email Address
-                    </label>
+                    <label class="form-label">Email Address</label>
                     <input
                         type="email"
                         name="email"
-                        class="form-control bg-dark text-white border-secondary @error('email') is-invalid @enderror"
+                        class="form-control @error('email') is-invalid @enderror"
                         value="{{ old('email') }}"
                         placeholder="Enter your registered email"
                     />
@@ -40,34 +38,29 @@
 
                 {{-- CAPTCHA --}}
                 <div class="mb-4">
-                    <label class="form-label text-secondary">
-                        <i class="bi bi-shield-check me-1"></i>CAPTCHA
-                    </label>
+                    <label class="form-label">Captcha</label>
 
                     {{-- SVG CAPTCHA --}}
-                    <div class="mb-2">
+                    <div class="d-flex align-items-center gap-2 mb-2">
                         <img
                             src="/captcha"
                             id="captchaImg"
                             alt="captcha"
-                            style="height:50px; border-radius:6px; cursor:pointer; border:1px solid #495057;"
+                            style="height:50px; border-radius:6px; cursor:pointer; border:1px solid #ccc;"
                             onclick="this.src='/captcha?' + Date.now()"
                         />
-                        <small class="text-secondary d-block mt-1">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            <span
-                                style="cursor:pointer; color:#00bfff;"
-                                onclick="document.getElementById('captchaImg').src='/captcha?' + Date.now()">
-                                Refresh CAPTCHA
-                            </span>
-                        </small>
+                        <button type="button"
+                                onclick="document.getElementById('captchaImg').src='/captcha?' + Date.now()"
+                                class="btn btn-secondary btn-sm">
+                            ↻
+                        </button>
                     </div>
 
                     <input
                         type="text"
                         name="captcha"
-                        class="form-control bg-dark text-white border-secondary @error('captcha') is-invalid @enderror"
-                        placeholder="Enter the answer"
+                        class="form-control @error('captcha') is-invalid @enderror"
+                        placeholder="Enter captcha"
                         autocomplete="off"
                     />
                     @error('captcha')
@@ -75,15 +68,13 @@
                     @enderror
                 </div>
 
-                <button type="submit" class="btn btn-info w-100 fw-bold" style="color:#fff;">
-                    <i class="bi bi-send me-2"></i>Send OTP
-                </button>
+                <button type="submit" class="btn btn-dark w-100">Send OTP</button>
 
             </form>
 
             <div class="text-center mt-3">
-                <a href="/signin" class="text-secondary" style="font-size:0.85rem;">
-                    ← Back to Sign In
+                <a href="/signin" style="font-size:0.85rem;">
+                    Back to Sign In
                 </a>
             </div>
 
