@@ -14,6 +14,10 @@ class FormSubmission extends Model
         'address',
         'email',
         'phone',
+        'state_code',
+        'district_code',
+        'subdistrict_code',
+        'block_code',
         'message',
         'image',
     ];

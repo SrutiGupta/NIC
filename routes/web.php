@@ -26,4 +26,7 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::get('/logout',  [AuthController::class, 'logout']);
 Route::get('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::get('/form', [FormController::class, 'index']);
+Route::get('/api/lgd/states/{stateCode}/districts', [FormController::class, 'districtsByState']);
+Route::get('/api/lgd/districts/{districtCode}/subdistricts', [FormController::class, 'subdistrictsByDistrict']);
+Route::get('/api/lgd/districts/{districtCode}/blocks', [FormController::class, 'blocksByDistrict']);
 Route::post('/submit', [FormController::class, 'submit']);

@@ -57,3 +57,51 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## LGD Administrative Data Setup
+
+### Prerequisites
+
+- PostgreSQL is running and reachable using `.env` values.
+- `.env` has `DB_CONNECTION=pgsql`.
+- LGD administrative CSVs are available at:
+	- `C:/Sruti/NIC244/india-local-government-directory-main/administrative/1-state.csv`
+	- `C:/Sruti/NIC244/india-local-government-directory-main/administrative/2-district.csv`
+	- `C:/Sruti/NIC244/india-local-government-directory-main/administrative/3-subdistrict.csv`
+	- `C:/Sruti/NIC244/india-local-government-directory-main/administrative/blocks.csv`
+
+### Migration command
+
+```bash
+php artisan migrate
+```
+
+### Import command (psql + artisan fallback)
+
+psql option:
+
+```bash
+psql -U postgres -d nic_db -h 127.0.0.1 -p 5432 -f database/sql/lgd_admin_import.sql
+```
+
+Artisan fallback option:
+
+```bash
+php artisan lgd:import-admin --dir="C:/Sruti/NIC244/india-local-government-directory-main/administrative"
+```
+
+### Verification queries
+
+```sql
+SELECT COUNT(*) AS state_count FROM lgd_states;
+SELECT COUNT(*) AS district_count FROM lgd_districts;
+SELECT COUNT(*) AS subdistrict_count FROM lgd_subdistricts;
+SELECT COUNT(*) AS block_count FROM lgd_blocks;
+```
+
+```sql
+SELECT id, name, state_code, district_code, subdistrict_code, block_code
+FROM form_submissions
+ORDER BY id DESC
+LIMIT 5;
+```
